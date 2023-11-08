@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -28,11 +28,37 @@ async function run() {
     await client.connect();
     
     const testimonialsCollection = client.db('roomBooking').collection('testimonials')
+    const roomsCollection = client.db('roomBooking').collection('rooms')
+
+    // Testimonials api
 
     app.get('/testimonials', async(req, res) =>{
         const cursor = testimonialsCollection.find();
         const result = await cursor.toArray();
         res.send(result)
+    })
+
+
+    // Rooms api
+
+    app.get('/rooms', async(req, res) =>{
+      const cursor = roomsCollection.find();
+      const result = await cursor.toArray();
+      res.send(result)
+    })
+
+    app.get('/rooms/:id', async(req, res) =>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id) }
+      const result = await roomsCollection.findOne(query);
+      res.send(result)
+    })
+
+    // Booking api
+
+    app.post('/bookings', async(req, res) =>{
+      const booking = req.body;
+      console.log(booking);
     })
 
     await client.db("admin").command({ ping: 1 });
