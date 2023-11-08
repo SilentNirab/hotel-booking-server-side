@@ -29,6 +29,7 @@ async function run() {
     
     const testimonialsCollection = client.db('roomBooking').collection('testimonials')
     const roomsCollection = client.db('roomBooking').collection('rooms')
+    const bookingCollection = client.db('roomBooking').collection('booking')
 
     // Testimonials api
 
@@ -59,6 +60,8 @@ async function run() {
     app.post('/bookings', async(req, res) =>{
       const booking = req.body;
       console.log(booking);
+      const result = await bookingCollection.insertOne(booking);
+      res.send(result)
     })
 
     await client.db("admin").command({ ping: 1 });
