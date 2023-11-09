@@ -1,13 +1,20 @@
 const express = require("express");
 const cors = require('cors');
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 
 //middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:5173'
+  ],
+  credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser());
 
 // booking-room
 // admin
@@ -32,6 +39,23 @@ async function run() {
     const roomsCollection = client.db('roomBooking').collection('rooms')
     const bookingCollection = client.db('roomBooking').collection('booking')
 
+    const verifyToken = (req, res, next) => {
+      const token = req?.cookies?.token;
+      console.log({ token });
+      if (!token) {
+        return res.status(401).send({ message: 'unauthorized access' });
+      }
+
+      jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) {
+          return res.status(401).send({ message: 'unauthorized access' });
+        }
+
+        req.user = decoded;
+        next();
+      });
+    };
+
     // Testimonials api
 
     app.get('/testimonials', async(req, res) =>{
@@ -49,19 +73,14 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/rooms/:id', async(req, res) =>{
+    app.get('/rooms/:id', verifyToken, async(req, res) =>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id) }
       const result = await roomsCollection.findOne(query);
       res.send(result)
     })
 
-    //auth api
-    app.post('/jwt', async(req, res) =>{
-      const user = req.body;
-      console.log('user token', user);
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN, {expiresIn: '1h'})
-    })
+
 
     // Booking api
 
@@ -75,6 +94,7 @@ async function run() {
     })
 
     app.get('/booking/:id', async(req, res) => {
+      console.log("cookies", req.cookies);
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
       const result = await bookingCollection.findOne(query);
