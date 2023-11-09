@@ -66,6 +66,13 @@ async function run() {
       res.send(result)
     })
 
+    app.get('/booking/:id', async(req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await bookingCollection.findOne(query);
+      res.send(result)
+    })
+
     app.post('/booking', async(req, res) =>{
       const booking = req.body;
       const result = await bookingCollection.insertOne(booking);
@@ -77,6 +84,25 @@ async function run() {
       const query = {_id: new ObjectId(id)};
       const result = await bookingCollection.deleteOne(query);
       res.send(result)
+    })
+
+    app.put('/booking/:id', async(req, res) =>{
+      const id = req.params.id;
+      const filter  = {_id: new ObjectId(id)};
+      const options = {upsert: true};
+      const updatedBook = req.body;
+      const booking = {
+          $set: {
+            room_name: updatedBook.room_name,
+            adults: updatedBook.adults,
+            childrens: updatedBook.childrens,
+            arival: updatedBook.arival,
+            Departure: updatedBook.Departure,
+            thumbnail_img: updatedBook.thumbnail_img,
+          }
+      }
+      const result = await bookingCollection.updateOne(filter, booking, options);
+      res.send(result);
     })
 
     await client.db("admin").command({ ping: 1 });
