@@ -41,7 +41,7 @@ async function run() {
 
     const verifyToken = (req, res, next) => {
       const token = req?.cookies?.token;
-      console.log({ token });
+
       if (!token) {
         return res.status(401).send({ message: 'unauthorized access' });
       }
@@ -68,8 +68,17 @@ async function run() {
     // Rooms api
 
     app.get('/rooms', async(req, res) =>{
-      const cursor = roomsCollection.find();
-      const result = await cursor.toArray();
+
+      let sortObj = {}
+
+      const sortField = req.query.sortField
+      const sortOrder = req.query.sortOrder
+
+      if (sortField && sortOrder) {
+        sortObj[sortField] = sortOrder
+      }
+      const cursor = roomsCollection.find().sort(sortObj);
+      const result = await cursor.toArray()
       res.send(result)
     })
 
