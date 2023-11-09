@@ -1,8 +1,9 @@
-const express = require("express");
+const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -19,7 +20,9 @@ app.use(cookieParser());
 // booking-room
 // admin
 
-const uri = "mongodb+srv://booking-room:admin@cluster0.ezxu64p.mongodb.net/?retryWrites=true&w=majority";
+// console.log(process.env.ACCESS_TOKEN)
+
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ezxu64p.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -46,7 +49,7 @@ async function run() {
         return res.status(401).send({ message: 'unauthorized access' });
       }
 
-      jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
         if (err) {
           return res.status(401).send({ message: 'unauthorized access' });
         }
@@ -82,7 +85,7 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/rooms/:id', verifyToken, async(req, res) =>{
+    app.get('/rooms/:id', async(req, res) =>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id) }
       const result = await roomsCollection.findOne(query);
@@ -102,7 +105,7 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/booking/:id', async(req, res) => {
+    app.get('/booking/:id',verifyToken, async(req, res) => {
       console.log("cookies", req.cookies);
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
@@ -152,12 +155,6 @@ async function run() {
 run().catch(console.dir);
 
 
-
-
-
-app.get('/', (req, res)=>{
-    res.send("booking is running")
-})
 
 app.listen(port,() =>{
     console.log(`room bookng server is running on port : ${port}`);
